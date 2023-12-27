@@ -1,6 +1,6 @@
 package com.recipe.myrecipe.auth.filter;
 
-import com.recipe.myrecipe.auth.util.JwtUtil;
+import com.recipe.myrecipe.auth.util.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends GenericFilterBean {
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -26,8 +26,8 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         String token = resolveToken((HttpServletRequest) servletRequest);
 
         //토큰 검사
-        if(token != null && jwtUtil.isValidateToken(token)){
-            Authentication authentication = jwtUtil.getAuthentication(token);
+        if(token != null && jwtTokenProvider.isValidateToken(token)){
+            Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(servletRequest, servletResponse);

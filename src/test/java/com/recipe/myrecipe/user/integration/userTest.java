@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.recipe.myrecipe.MyrecipeApplication;
-import com.recipe.myrecipe.auth.util.JwtUtil;
+import com.recipe.myrecipe.auth.util.JwtTokenProvider;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
-import com.recipe.myrecipe.user.repository.UserDao;
+import com.recipe.myrecipe.user.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ public class userTest {
     MockMvc mockMvc;
 
     @Autowired
-    JwtUtil jwtUtil;
+    JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     JdbcTemplate jdbc;
@@ -45,7 +45,7 @@ public class userTest {
     ObjectMapper objectMapper;
 
     @Autowired
-    UserDao userDao;
+    UserRepository userRepository;
 
     @BeforeEach
     public void setupDb() {
@@ -56,7 +56,7 @@ public class userTest {
 
     @Test
     public void testSetup(){
-        Assertions.assertTrue(userDao.findById("testOne").isPresent(), "유저 데이터가 세팅되지 않았습니다.");
+        Assertions.assertTrue(userRepository.getByUserId("testOne").isPresent(), "유저 데이터가 세팅되지 않았습니다.");
     }
 
     @Test

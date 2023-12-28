@@ -6,20 +6,23 @@ import com.jayway.jsonpath.JsonPath;
 import com.recipe.myrecipe.MyrecipeApplication;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
+import com.recipe.myrecipe.user.dto.UserSiginUpDTO;
+import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.UserRepository;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
@@ -29,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = MyrecipeApplication.class)
+@Transactional
 @AutoConfigureMockMvc
 public class userTest {
 
@@ -47,10 +51,14 @@ public class userTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @BeforeEach
     public void setupDb() {
-        String insertQuery = "INSERT INTO user(user_id, password, grant_type, email, role) " +
-                "VALUES('testOne', 'testOne', 'normal', 'testOne@ggg.com', 'USER')";
+        String encodedPw = passwordEncoder.encode("testOne");
+        String insertQuery = "INSERT INTO user(user_id, password, grant_type, email) " +
+                "VALUES('testOne', '" + encodedPw + "', 'normal', 'testOne@ggg.com')";
         jdbc.execute(insertQuery);
     }
 
@@ -68,12 +76,9 @@ public class userTest {
         Authentication authentication = mock(Authentication.class);
         given(authentication.getName()).willReturn(username);
 
-//        given(jwtUtil.generateAccessToken(authentication)).willReturn(accessToken);
-//        given(jwtUtil.generateRefreshToken(authentication)).willReturn(refreshToekn);
-
-        MvcResult result = mockMvc.perform(post("/user/login").contentType(MediaType.APPLICATION_JSON)
+        MvcResult result = mockMvc.perform(post("/sign-api/sign-in").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(UserLoginDTO.builder()
-                        .userId(username).userPassword(password).grantType("normal")
+                        .userId(username).userPassword(password).grantType("normal").email("testOne@ggg.com")
                         .build())))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -90,7 +95,7 @@ public class userTest {
     public void when_loginInfoIsNotCollect_Expect_exception() throws Exception {
         String username = "testZero";//not exist
         String password = "testZero";//not exist
-        mockMvc.perform(post("/user/login")
+        mockMvc.perform(post("/sign-api/sign-in")
                         .param("username", username)
                         .param("password", password))
                 .andExpect(status().is4xxClientError())
@@ -98,7 +103,31 @@ public class userTest {
                 .andExpect(jsonPath("$.message", is("User info does not correct")));
     }
 
-    @BeforeEach
+    @Test
+    public void when_signupInfoIsCorrect_Expect_success() throws Exception{
+        UserSiginUpDTO userSiginUpDTO = UserSiginUpDTO.builder()
+                .userId("siginUpTestOne")
+                .userPassword("siginUpTestOne")
+                .email("siginUpTestOne@gmail.com")
+                .grantType("normal")
+                .build();
+
+
+        mockMvc.perform(post("/sign-api/sign-up")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userSiginUpDTO)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Optional<User> signupUser = userRepository.getByUserId("siginUpTestOne");
+
+        Assertions.assertTrue(signupUser.isPresent(), "등록된 사용자가 존재하지 않습니다");
+        Assertions.assertTrue(signupUser.get().getUserId().equals("siginUpTestOne"), "아이디가 일치하지 않습니다." );
+        Assertions.assertTrue(signupUser.get().getEmail().equals("siginUpTestOne@gmail.com"), "이메일이 일치하지 않습니다." );
+        Assertions.assertTrue(signupUser.get().getGrantType().equals("normal"), "회원가입 방식이 일치하지 않습니다." );
+    }
+
+    @AfterEach
     public void cleanupDb(){
         String deleteQuery = "DELETE FROM user WHERE user_id = 'testOne'";
         jdbc.execute(deleteQuery);

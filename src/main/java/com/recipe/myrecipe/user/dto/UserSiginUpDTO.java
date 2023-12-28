@@ -2,14 +2,14 @@ package com.recipe.myrecipe.user.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Builder
-public class UserLoginDTO {
+public class UserSiginUpDTO {
     private String userId;
     private String userPassword;
     private String email;
     private String grantType;
-    private String role;
 }

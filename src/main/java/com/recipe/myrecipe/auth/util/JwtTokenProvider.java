@@ -38,22 +38,30 @@ public class JwtTokenProvider {
 
     public String generateToken(String userId, List<String> roles, long expirationTime){
         log.info("[generateToken] 토큰 생성");
-        Claims claims = Jwts.claims().setSubject(userId).build();
+
+       // Claims claims = Jwts.claims().subject(userId).build();
+
+        Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
+
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expirationTime);
+        log.info("[generateToken] 토큰 생성2");
 
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(userId)
-                .setIssuedAt(now)
-                .setExpiration(expiration)
+        String jwts = Jwts.builder()
+                .claims(claims)
+                .subject(userId)
+                .issuedAt(now)
+                .expiration(expiration)
                 .signWith(SECRET_KEY)
                 .compact();
+        log.info("[generateToken] 토큰 생성 완료");
+
+        return jwts;
     }
 
     public boolean isValidateToken(String token) {
+        log.info("[isValidateToken] - accesstoken : ${}", token);
         try {
             Jwts.parser().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
             return true;

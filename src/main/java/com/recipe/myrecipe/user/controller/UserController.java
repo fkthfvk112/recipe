@@ -3,6 +3,7 @@ package com.recipe.myrecipe.user.controller;
 import com.recipe.myrecipe.auth.dto.TokenDTO;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
 import com.recipe.myrecipe.user.dto.SignInResultDTO;
+import com.recipe.myrecipe.user.dto.UserAndRefreshDTO;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
 import com.recipe.myrecipe.user.dto.UserSiginUpDTO;
 import com.recipe.myrecipe.user.service.SignService;
@@ -16,9 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -48,8 +47,8 @@ public class UserController {
         if(signInResultDTO.isSuccess()){
             log.info("[signIn] - 로그인 성공");
             Authentication authentication = new UsernamePasswordAuthenticationToken(userLoginDTO.getUserId(), null, Collections.emptyList());
-            String accessToken = jwtTokenProvider.generateAccessToken(authentication.getName(), null);
-            String refreshToken = jwtTokenProvider.generateRefreshToken(authentication.getName(), null);
+            String accessToken = jwtTokenProvider.generateAccessToken(authentication.getName(), List.of("USER"));
+            String refreshToken = jwtTokenProvider.generateRefreshToken(authentication.getName(), List.of("USER"));
 
             HttpHeaders headers = new HttpHeaders();
             headers.add("Authorization", "Bearer " + accessToken);
@@ -58,6 +57,7 @@ public class UserController {
             TokenDTO tokenDTO = TokenDTO.builder().grantType("Bearer")
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
+                    .autorities(List.of("USER"))
                     .build();
 
             return new ResponseEntity<>(tokenDTO, headers, HttpStatus.OK);
@@ -76,5 +76,20 @@ public class UserController {
         }else{
             throw new RuntimeException("sign up fail");
         }
+    }
+
+    @PostMapping("/get-accesstoken")
+    public ResponseEntity<Map<String, String>> getAccessTokenFromRefreshToken(@RequestBody UserAndRefreshDTO dto){
+        log.info("[getAccessTokenFromRefreshToken] - 시작", dto.toString());
+        if(jwtTokenProvider.isValidateToken(dto.getRefreshToken())){
+            log.info("[getAccessTokenFromRefreshToken] - 리프래쉬 검증 성공");
+
+            Map<String, String> resultMap = new HashMap<>();
+            resultMap.put("newAccessToken", jwtTokenProvider.generateAccessToken(dto.getUserId(), dto.getRoles()));
+            return ResponseEntity.status(HttpStatus.OK).body(resultMap);
+        }
+
+        log.info("[getAccessTokenFromRefreshToken] - 리프래쉬 검증 실패");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 }

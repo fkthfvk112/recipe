@@ -2,9 +2,11 @@ package com.recipe.myrecipe.auth.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,9 +27,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
     private final UserDetailsService userDetailsService;
-    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+   // private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+
+    @Value("${springboot.jwt.secret}")
+    private String secretKey = "secretKey";
     private static final long ACCESS_EXPIRATION_TIME = 3 * 60 * 60 * 1000;//3시간
     private static final long REFRESH_EXPIRATION_TIME = 30 * 60 * 1000;//30분
+
+    @PostConstruct
+    protected void init(){
+        log.info("[JwtTokenProvider-init] 초기화 시작 - secretKey : ${}", secretKey);
+        secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
+        log.info("[JwtTokenProvider-init] 초기화 완료 - secretKey : ${}", secretKey );
+    }
 
     public String generateAccessToken(String userId, List<String> roles){
         return generateToken(userId, roles, ACCESS_EXPIRATION_TIME);
@@ -53,7 +66,7 @@ public class JwtTokenProvider {
                 .subject(userId)
                 .issuedAt(now)
                 .expiration(expiration)
-                .signWith(SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, secretKey.getBytes())
                 .compact();
         log.info("[generateToken] 토큰 생성 완료");
 
@@ -61,20 +74,23 @@ public class JwtTokenProvider {
     }
 
     public boolean isValidateToken(String token) {
-        log.info("[isValidateToken] - accesstoken : ${}", token);
+        log.info("[isValidateToken] - accesstoken : {}", token);
         try {
-            Jwts.parser().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secretKey.getBytes()).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("[isValidateToken] : Invalid JWT Token", e);
+            return false;
         } catch (ExpiredJwtException e) {
             log.info("[isValidateToken] : Expired JWT Token", e);
+            return false;
         } catch (UnsupportedJwtException e) {
             log.info("[isValidateToken] : Unsupported JWT Token", e);
+            return false;
         } catch (IllegalArgumentException e) {
             log.info("[isValidateToken] : JWT claims string is empty.", e);
+            return false;
         }
-        return false;
     }
 
     private String resolveToken(HttpServletRequest request){
@@ -83,19 +99,19 @@ public class JwtTokenProvider {
     }
 
     private Claims parseClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).build().parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(secretKey.getBytes()).build().parseClaimsJws(token).getBody();
     }
 
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 
-        if (claims.get("auth") == null) {
+        if (claims.get("roles") == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
 
 
         Collection<? extends GrantedAuthority> authorities =
-                ((List<?>) claims.get("auth")).stream()
+                ((List<?>) claims.get("roles")).stream()
                         .map(authority -> new SimpleGrantedAuthority((String) authority))
                         .collect(Collectors.toList());
 

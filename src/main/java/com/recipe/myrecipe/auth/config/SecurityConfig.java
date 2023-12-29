@@ -23,12 +23,15 @@ public class SecurityConfig {
     }
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         return http
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
-                //.csrf(AbstractHttpConfigurer::disable)//추후 켜고 보안 추가
+                .csrf(AbstractHttpConfigurer::disable)//추후 켜고 보안 추가
                 // 특정 URL에 대한 권한 설정.
                 .authorizeHttpRequests((authorizeRequests) -> {
+                    authorizeRequests.requestMatchers("/sign-api/**").permitAll(); // 권한 없어도 열람 가능
+
                     authorizeRequests.requestMatchers("/auth-test/**").authenticated(); //제한
                     authorizeRequests.requestMatchers("/manager/**")
                             // ROLE_은 붙이면 안 된다. hasAnyRole()을 사용할 때 자동으로 ROLE_이 붙기 때문이다.
@@ -39,19 +42,13 @@ public class SecurityConfig {
                             .hasRole("ADMIN");
 
                     authorizeRequests.anyRequest().permitAll();
-
                 })
+
 
 //                .formLogin((formLogin) -> {
 //                    /* 권한이 필요한 요청은 해당 url로 리다이렉트 */
 //                    formLogin.loginPage("/login");
 //                })
-
                 .build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

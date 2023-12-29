@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.recipe.myrecipe.MyrecipeApplication;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
+import com.recipe.myrecipe.user.dto.UserAndRefreshDTO;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
 import com.recipe.myrecipe.user.dto.UserSiginUpDTO;
 import com.recipe.myrecipe.user.entity.User;
@@ -22,6 +23,8 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
@@ -77,9 +80,9 @@ public class userTest {
         given(authentication.getName()).willReturn(username);
 
         MvcResult result = mockMvc.perform(post("/sign-api/sign-in").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(UserLoginDTO.builder()
-                        .userId(username).userPassword(password).grantType("normal").email("testOne@ggg.com")
-                        .build())))
+                        .content(objectMapper.writeValueAsString(UserLoginDTO.builder()
+                                .userId(username).userPassword(password).grantType("normal").email("testOne@ggg.com")
+                                .build())))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -89,6 +92,33 @@ public class userTest {
         Assertions.assertTrue(authrizationHeader != null, "헤더가 비어있습니다.");
         Assertions.assertTrue(responseBody.contains("accessToken"), "액세스 토큰이 반환되지 않았습니다.");
         Assertions.assertTrue(responseBody.contains("refreshToken"), "리프래쉬 토큰이 반환되지 않았습니다.");
+    }
+
+    @Test
+    void When_requestRefreshToken_Expect_tokenOrError() throws Exception{
+        String validRefreshToken = jwtTokenProvider.generateAccessToken("testUser",List.of("USER"));
+        String invalidRefreshToken = "invalidTestToken";
+
+        System.out.println("토큰" + validRefreshToken);
+
+        UserAndRefreshDTO dto = UserAndRefreshDTO.builder()
+                .refreshToken(validRefreshToken)
+                .roles(List.of("USER"))
+                .userId("TestUserId").build();
+
+
+        MvcResult result = mockMvc.perform(post("/sign-api/get-accesstoken")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        System.out.println("반환값 : " + responseBody);
+        Map<String, String> responseMap = objectMapper.readValue(responseBody, Map.class);
+
+        Assertions.assertTrue(jwtTokenProvider.isValidateToken(responseMap.get("newAccessToken")),
+                "발급 받은 토큰이 유효하지 않습니다");
     }
 
     @Test

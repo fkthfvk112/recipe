@@ -30,14 +30,17 @@ public class SignServiceImpl implements SignService {
     @Override
     public boolean signUp(UserSiginUpDTO userSiginUpDTO) {
         log.info("[SignServiceImpl-signUp] - 회원가입 시도");
+        log.info("디티오오" + userSiginUpDTO.toString());
         User user = User.builder()
                 .userId(userSiginUpDTO.getUserId())
                 .password(passwordEncoder.encode(userSiginUpDTO.getUserPassword()))
                 .email(userSiginUpDTO.getEmail())
                 .grantType(userSiginUpDTO.getGrantType()).build();
+        log.info("엔터티" + user.toString());
 
         User savedUser = userRepository.save(user);
         if(!savedUser.getUserId().isEmpty()){
+            log.info("[SignServiceImpl-signUp] - 회원가입 성공");
             return true;
         }
         return false;

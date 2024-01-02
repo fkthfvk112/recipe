@@ -7,6 +7,7 @@ import lombok.ToString;
 
 @Getter
 @Builder
+@ToString
 public class UserSiginUpDTO {
     private String userId;
     private String userPassword;

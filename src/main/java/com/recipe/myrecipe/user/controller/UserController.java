@@ -1,6 +1,9 @@
 package com.recipe.myrecipe.user.controller;
 
+import com.recipe.myrecipe.auth.dto.RefreshTokenDTO;
 import com.recipe.myrecipe.auth.dto.TokenDTO;
+import com.recipe.myrecipe.auth.repository.TokenRepository;
+import com.recipe.myrecipe.auth.service.TokenService;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
 import com.recipe.myrecipe.user.dto.SignInResultDTO;
 import com.recipe.myrecipe.user.dto.UserAndRefreshDTO;
@@ -8,8 +11,10 @@ import com.recipe.myrecipe.user.dto.UserLoginDTO;
 import com.recipe.myrecipe.user.dto.UserSiginUpDTO;
 import com.recipe.myrecipe.user.service.SignService;
 import com.recipe.myrecipe.user.service.impl.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,26 +28,36 @@ import java.util.*;
 @RestController
 @RequestMapping("/sign-api")
 public class UserController {
+
+    @Value("${cookieDomain}")
+    private String cookieDomain;
     private final JwtTokenProvider jwtTokenProvider;
     private UserService userService;
     private SignService signService;
+    private TokenService tokenService;
+    private TokenRepository tokenRepository;
 
     @Autowired
-    UserController(UserService userService, JwtTokenProvider jwtTokenProvider, SignService signService){
+    UserController(UserService userService, JwtTokenProvider jwtTokenProvider,
+                   SignService signService, TokenService tokenService,
+                   TokenRepository tokenRepository){
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.signService = signService;
+        this.tokenService = tokenService;
+        this.tokenRepository = tokenRepository;
     }
 
-    @PostMapping("/hello")
+    @GetMapping("/hello")
     public String hello(){
+        log.info("[hello] - hello");
+
         return "hello world";
     }
     @PostMapping("/sign-in")
-    public ResponseEntity<TokenDTO> signIn(@RequestBody UserLoginDTO userLoginDTO){
+    public ResponseEntity<String> signIn(@RequestBody UserLoginDTO userLoginDTO){
         log.info("[signIn] - 로그인 시도");
         SignInResultDTO signInResultDTO = signService.signIn(userLoginDTO);
-        log.info("[signIn] - 로그인 시도2");
 
         if(signInResultDTO.isSuccess()){
             log.info("[signIn] - 로그인 성공");
@@ -50,20 +65,39 @@ public class UserController {
             String accessToken = jwtTokenProvider.generateAccessToken(authentication.getName(), List.of("USER"));
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication.getName(), List.of("USER"));
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("Authorization", "Bearer " + accessToken);
-            headers.add("Refresh-Token", refreshToken);
-
-            TokenDTO tokenDTO = TokenDTO.builder().grantType("Bearer")
-                    .accessToken(accessToken)
+            tokenService.saveOrReplaceRefreshToken(RefreshTokenDTO.builder()
+                    .userName(userLoginDTO.getUserId())
                     .refreshToken(refreshToken)
-                    .autorities(List.of("USER"))
-                    .build();
+                    .build());
 
-            return new ResponseEntity<>(tokenDTO, headers, HttpStatus.OK);
+            HttpHeaders headers = new HttpHeaders();
+
+            String cookiePath = "/"; // 쿠키의 유효 경로를 애플리케이션 루트로 설정
+//            String cookieDomain = "localhost"; // 쿠키의 유효 도메인을 설정 (도메인이 localhost인 경우)
+            String accessTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure; HttpOnly", "Authorization", "Bearer " + accessToken, cookiePath, cookieDomain);
+            String refreshTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure", "Refresh-token", refreshToken, cookiePath, cookieDomain);
+
+            headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie);
+            headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie);
+
+            return new ResponseEntity<>("signIn Success", headers, HttpStatus.OK);
         } else{
             throw new RuntimeException("User not found");
         }
+    }
+
+    @GetMapping("/token")
+    public ResponseEntity<String> tokenTest(){
+        System.out.println("토큰");
+        String cookiePath = "/"; // 쿠키의 유효 경로를 애플리케이션 루트로 설정
+        String cookieDomain = "localhost"; // 쿠키의 유효 도메인을 설정 (도메인이 localhost인 경우)
+
+        HttpHeaders headers = new HttpHeaders();
+        String cookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure", "hello", "world", cookiePath, cookieDomain);
+
+        headers.add(HttpHeaders.SET_COOKIE, cookie);
+
+            return new ResponseEntity<>("hello", headers, HttpStatus.OK);
     }
 
     @PostMapping("/sign-up")
@@ -78,9 +112,19 @@ public class UserController {
         }
     }
 
-    @PostMapping("/get-accesstoken")
-    public ResponseEntity<Map<String, String>> getAccessTokenFromRefreshToken(@RequestBody UserAndRefreshDTO dto){
+    @PostMapping("/get-accesstoken") //테스트 필요!
+    public ResponseEntity<Map<String, String>> getAccessTokenFromRefreshToken(@RequestBody UserAndRefreshDTO dto, HttpServletRequest request){
         log.info("[getAccessTokenFromRefreshToken] - 시작", dto.toString());
+
+        String refreshToken = jwtTokenProvider.getRefreshTokenValue(request);
+        log.info("[getAccessTokenFromRefreshToken] - refreshToken :{}", refreshToken);
+        if(refreshToken != null){
+            if(!tokenRepository.findByUserName(dto.getUserId()).get().equals(refreshToken)){
+                log.info("[getAccessTokenFromRefreshToken] - DB 정보와 토큰 일치 X");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+        }
+
         if(jwtTokenProvider.isValidateToken(dto.getRefreshToken())){
             log.info("[getAccessTokenFromRefreshToken] - 리프래쉬 검증 성공");
 

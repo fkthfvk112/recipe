@@ -81,7 +81,7 @@ public class userTest {
 
         MvcResult result = mockMvc.perform(post("/sign-api/sign-in").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(UserLoginDTO.builder()
-                                .userId(username).userPassword(password).grantType("normal").email("testOne@ggg.com")
+                                .userId(username).userPassword(password).grantType("normal")
                                 .build())))
                 .andExpect(status().isOk())
                 .andReturn();

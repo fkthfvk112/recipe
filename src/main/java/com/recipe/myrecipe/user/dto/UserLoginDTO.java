@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 public class UserLoginDTO {
     private String userId;
     private String userPassword;
-    private String email;
     private String grantType;
     private String role;
 }

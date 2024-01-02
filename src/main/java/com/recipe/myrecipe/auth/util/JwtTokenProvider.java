@@ -3,6 +3,7 @@ package com.recipe.myrecipe.auth.util;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
@@ -76,8 +79,19 @@ public class JwtTokenProvider {
     public boolean isValidateToken(String token) {
         log.info("[isValidateToken] - accesstoken : {}", token);
         try {
-            Jwts.parser().setSigningKey(secretKey.getBytes()).build().parseClaimsJws(token);
-            return true;
+            Jws<Claims> jws = Jwts.parser().setSigningKey(secretKey.getBytes()).build().parseClaimsJws(token);
+            Claims claims = jws.getBody();
+            //리프래쉬 토큰와 액세스 토큰 구분
+            if(claims.containsKey("roles")){
+                log.info("[isValidateToken] 역할 ... ", claims.get("roles"));
+                List<String> roles = (List<String>) claims.get("roles");
+                System.out.println("롤 " + roles);
+                if(roles.contains("USER")) {
+                    return true;
+                }
+            }
+            log.info("[isValidateToken] 엄슴", claims.get("roles"));
+            return false;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("[isValidateToken] : Invalid JWT Token", e);
             return false;
@@ -125,5 +139,25 @@ public class JwtTokenProvider {
         log.info("[getUserName] 토큰에서 회원 이름 추출 완료, info : {}", info);
 
         return info;
+    }
+
+    public String getRefreshTokenValue(HttpServletRequest request) {
+        String refreshTokenValue = "";
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                System.out.println("이름:" + cookie.getName());
+                if (cookie.getName().startsWith("Authorization")) {
+                    try {
+                        return  URLDecoder.decode(cookie.getName(), "UTF-8");
+                    } catch (Exception e) {
+                        log.info("[getRefreshTokenValue] - {}", e);
+                        return null;
+                    }
+
+                }
+            }
+        }
+        return null;
     }
 }

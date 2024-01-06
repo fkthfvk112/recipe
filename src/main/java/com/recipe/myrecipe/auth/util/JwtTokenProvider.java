@@ -34,8 +34,8 @@ public class JwtTokenProvider {
 
     @Value("${springboot.jwt.secret}")
     private String secretKey = "secretKey";
-    private static final long ACCESS_EXPIRATION_TIME = 3 * 60 * 60 * 1000;//3시간
-    private static final long REFRESH_EXPIRATION_TIME = 30 * 60 * 1000;//30분
+    private static final long ACCESS_EXPIRATION_TIME = 5000;//5초 ... 수정
+    private static final long REFRESH_EXPIRATION_TIME = 3 * 60 * 60 * 1000;//3시간
 
     @PostConstruct
     protected void init(){
@@ -85,7 +85,6 @@ public class JwtTokenProvider {
             if(claims.containsKey("roles")){
                 log.info("[isValidateToken] 역할 ... ", claims.get("roles"));
                 List<String> roles = (List<String>) claims.get("roles");
-                System.out.println("롤 " + roles);
                 if(roles.contains("USER")) {
                     return true;
                 }
@@ -96,7 +95,7 @@ public class JwtTokenProvider {
             log.info("[isValidateToken] : Invalid JWT Token", e);
             return false;
         } catch (ExpiredJwtException e) {
-            log.info("[isValidateToken] : Expired JWT Token", e);
+            log.info("[isValidateToken] : Expired JWT Token");
             return false;
         } catch (UnsupportedJwtException e) {
             log.info("[isValidateToken] : Unsupported JWT Token", e);
@@ -104,6 +103,17 @@ public class JwtTokenProvider {
         } catch (IllegalArgumentException e) {
             log.info("[isValidateToken] : JWT claims string is empty.", e);
             return false;
+        }
+    }
+
+    public boolean isExpiredAccessToken(String token){
+        try {
+            Jws<Claims> jws = Jwts.parser().setSigningKey(secretKey.getBytes()).build().parseClaimsJws(token);
+            Claims claims = jws.getBody();
+            return false;
+        } catch (ExpiredJwtException e) {
+            //log.info("[isExpiredAccessToken] : Expired JWT Token", e);
+            return true;
         }
     }
 
@@ -142,19 +152,17 @@ public class JwtTokenProvider {
     }
 
     public String getRefreshTokenValue(HttpServletRequest request) {
+        log.info("[getRefreshTokenValue] 리프래쉬 토큰 얻기 시작");
+
         String refreshTokenValue = "";
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 System.out.println("이름:" + cookie.getName());
-                if (cookie.getName().startsWith("Authorization")) {
-                    try {
-                        return  URLDecoder.decode(cookie.getName(), "UTF-8");
-                    } catch (Exception e) {
-                        log.info("[getRefreshTokenValue] - {}", e);
-                        return null;
-                    }
+                System.out.println("값:" + cookie.getValue());
 
+                if (cookie.getName().startsWith("Refresh-token")) {
+                    return cookie.getValue();
                 }
             }
         }

@@ -2,9 +2,12 @@ package com.recipe.myrecipe.user.controller;
 
 import com.recipe.myrecipe.auth.dto.RefreshTokenDTO;
 import com.recipe.myrecipe.auth.dto.TokenDTO;
+import com.recipe.myrecipe.auth.entity.RefreshToken;
 import com.recipe.myrecipe.auth.repository.TokenRepository;
 import com.recipe.myrecipe.auth.service.TokenService;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
+import com.recipe.myrecipe.error.BusinessException;
+import com.recipe.myrecipe.error.ErrorCode;
 import com.recipe.myrecipe.user.dto.SignInResultDTO;
 import com.recipe.myrecipe.user.dto.UserAndRefreshDTO;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
@@ -56,6 +59,8 @@ public class UserController {
     }
     @PostMapping("/sign-in")
     public ResponseEntity<String> signIn(@RequestBody UserLoginDTO userLoginDTO){
+
+//    public ResponseEntity<String> signIn(@RequestBody UserLoginDTO userLoginDTO){
         log.info("[signIn] - 로그인 시도");
         SignInResultDTO signInResultDTO = signService.signIn(userLoginDTO);
 
@@ -74,7 +79,7 @@ public class UserController {
 
             String cookiePath = "/"; // 쿠키의 유효 경로를 애플리케이션 루트로 설정
 //            String cookieDomain = "localhost"; // 쿠키의 유효 도메인을 설정 (도메인이 localhost인 경우)
-            String accessTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure; HttpOnly", "Authorization", "Bearer " + accessToken, cookiePath, cookieDomain);
+            String accessTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure; HttpOnly", "Authorization", "Bearer_" + accessToken, cookiePath, cookieDomain);
             String refreshTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure", "Refresh-token", refreshToken, cookiePath, cookieDomain);
 
             headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie);
@@ -100,7 +105,7 @@ public class UserController {
             return new ResponseEntity<>("hello", headers, HttpStatus.OK);
     }
 
-    @PostMapping("/sign-up")
+    @GetMapping("/sign-up")
     public ResponseEntity<Map<String, String>> signUn(@RequestBody UserSiginUpDTO userSiginUpDTO) {
         if(signService.signUp(userSiginUpDTO)){
             Map<String, String> response = new HashMap<>();
@@ -112,28 +117,45 @@ public class UserController {
         }
     }
 
-    @PostMapping("/get-accesstoken") //테스트 필요!
-    public ResponseEntity<Map<String, String>> getAccessTokenFromRefreshToken(@RequestBody UserAndRefreshDTO dto, HttpServletRequest request){
-        log.info("[getAccessTokenFromRefreshToken] - 시작", dto.toString());
+    @GetMapping("/get-accesstoken")
+    public ResponseEntity<String> getAccessTokenFromRefreshToken(HttpServletRequest request){
+        log.info("[getAccessTokenFromRefreshToken] - 시작");
 
         String refreshToken = jwtTokenProvider.getRefreshTokenValue(request);
         log.info("[getAccessTokenFromRefreshToken] - refreshToken :{}", refreshToken);
-        if(refreshToken != null){
-            if(!tokenRepository.findByUserName(dto.getUserId()).get().equals(refreshToken)){
-                log.info("[getAccessTokenFromRefreshToken] - DB 정보와 토큰 일치 X");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
+        if(refreshToken == null) throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
+
+        String userName = jwtTokenProvider.getUserName(refreshToken);
+
+        String savedRefreshTokenString = tokenRepository.findByUserName(userName).get().getRefreshToken();
+        System.out.println("유저 네임" + jwtTokenProvider.getUserName(savedRefreshTokenString));
+
+        if(!savedRefreshTokenString.equals(refreshToken)){
+            log.info("[getAccessTokenFromRefreshToken] - DB 정보와 토큰 일치 X");
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_COLLECT_DB);
         }
 
-        if(jwtTokenProvider.isValidateToken(dto.getRefreshToken())){
+        if(jwtTokenProvider.isValidateToken(refreshToken)){
             log.info("[getAccessTokenFromRefreshToken] - 리프래쉬 검증 성공");
 
-            Map<String, String> resultMap = new HashMap<>();
-            resultMap.put("newAccessToken", jwtTokenProvider.generateAccessToken(dto.getUserId(), dto.getRoles()));
-            return ResponseEntity.status(HttpStatus.OK).body(resultMap);
-        }
+            String accessToken = jwtTokenProvider.generateAccessToken(userName, List.of("USER"));
 
-        log.info("[getAccessTokenFromRefreshToken] - 리프래쉬 검증 실패");
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            HttpHeaders headers = new HttpHeaders();
+            String cookiePath = "/"; // 쿠키의 유효 경로를 애플리케이션 루트로 설정
+            String accessTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure; HttpOnly",
+                    "Authorization", "Bearer_" + accessToken, cookiePath, cookieDomain);
+            headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie);
+            //headers.add(HttpHeaders.COOKIE, accessToken);
+
+            return new ResponseEntity<>("Issue new token success", headers, HttpStatus.OK);
+        }else{
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_VALID);
+        }
+    }
+
+    @GetMapping("/access-expired")
+    public void accessExpired(){
+        log.info("[accessExpired]");
+        throw new BusinessException(ErrorCode.ACCESS_TOKEN_EXPIRED);
     }
 }

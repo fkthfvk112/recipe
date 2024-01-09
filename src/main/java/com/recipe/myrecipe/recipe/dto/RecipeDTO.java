@@ -34,5 +34,4 @@ public class RecipeDTO {
     String description;
 
     List<StepDTO> steps;
-
 }

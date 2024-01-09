@@ -57,6 +57,13 @@ public class UserController {
 
         return "hello world";
     }
+
+    @PostMapping("/hello2")
+    public String hello2(){
+        log.info("[hello] - hello");
+
+        return "hello world";
+    }
     @PostMapping("/sign-in")
     public ResponseEntity<String> signIn(@RequestBody UserLoginDTO userLoginDTO){
 
@@ -105,8 +112,9 @@ public class UserController {
             return new ResponseEntity<>("hello", headers, HttpStatus.OK);
     }
 
-    @GetMapping("/sign-up")
+    @PostMapping("/sign-up")
     public ResponseEntity<Map<String, String>> signUn(@RequestBody UserSiginUpDTO userSiginUpDTO) {
+        log.info("signUn start");
         if(signService.signUp(userSiginUpDTO)){
             Map<String, String> response = new HashMap<>();
             response.put("status", "200");
@@ -117,8 +125,44 @@ public class UserController {
         }
     }
 
-    @GetMapping("/get-accesstoken")
+    @PostMapping("/get-accesstoken")
     public ResponseEntity<String> getAccessTokenFromRefreshToken(HttpServletRequest request){
+        log.info("[getAccessTokenFromRefreshToken] - 시작");
+
+        String refreshToken = jwtTokenProvider.getRefreshTokenValue(request);
+        log.info("[getAccessTokenFromRefreshToken] - refreshToken :{}", refreshToken);
+        if(refreshToken == null) throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
+
+        String userName = jwtTokenProvider.getUserName(refreshToken);
+
+        String savedRefreshTokenString = tokenRepository.findByUserName(userName).get().getRefreshToken();
+        System.out.println("유저 네임" + jwtTokenProvider.getUserName(savedRefreshTokenString));
+
+        if(!savedRefreshTokenString.equals(refreshToken)){
+            log.info("[getAccessTokenFromRefreshToken] - DB 정보와 토큰 일치 X");
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_COLLECT_DB);
+        }
+
+        if(jwtTokenProvider.isValidateToken(refreshToken)){
+            log.info("[getAccessTokenFromRefreshToken] - 리프래쉬 검증 성공");
+
+            String accessToken = jwtTokenProvider.generateAccessToken(userName, List.of("USER"));
+
+            HttpHeaders headers = new HttpHeaders();
+            String cookiePath = "/"; // 쿠키의 유효 경로를 애플리케이션 루트로 설정
+            String accessTokenCookie = String.format("%s=%s; Path=%s; Domain=%s; SameSite=None; Secure; HttpOnly",
+                    "Authorization", "Bearer_" + accessToken, cookiePath, cookieDomain);
+            headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie);
+            //headers.add(HttpHeaders.COOKIE, accessToken);
+
+            return new ResponseEntity<>("Issue new token success", headers, HttpStatus.OK);
+        }else{
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_VALID);
+        }
+    }
+
+    @PostMapping("/get-accesstoken-post")
+    public ResponseEntity<String> getAccessTokenFromRefreshTokenPost(HttpServletRequest request){
         log.info("[getAccessTokenFromRefreshToken] - 시작");
 
         String refreshToken = jwtTokenProvider.getRefreshTokenValue(request);

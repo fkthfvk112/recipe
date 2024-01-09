@@ -32,8 +32,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        log.info("[doFilter] - 요청 메소드" + request.getMethod());
+
         log.info("[doFilter] - 필터 시작" + request.getRequestURL());
         Enumeration<String> headerNames = request.getHeaderNames();
+
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
             String headerValue = request.getHeader(headerName);
@@ -54,28 +57,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if(jwtTokenProvider.isExpiredAccessToken(token.getAccessToken())){
                 log.info("[doFilter] -  토큰 유효기간 초과");
-                request.getRequestDispatcher("/sign-api/get-accesstoken").forward(request, response);
+                if(request.getMethod().equals("POST")){
+                    log.info("[doFilter] - post임");
+                    request.getRequestDispatcher("/sign-api/get-accesstoken-post").forward(request, response);
+                }
+                if(request.getMethod().equals("GET")){
+                    log.info("[doFilter] - get임");
+
+                    request.getRequestDispatcher("/sign-api/get-accesstoken").forward(request, response);
+                }
                 return;
             }
         }
         log.info("[doFilter] - 토큰 유효성 테스트 결과 : false");
         filterChain.doFilter(request, response);
     }
-
-//    public void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
-//        log.info("[sendErrorResponse] - false 리턴");
-//        ErrorCode errorCode = ErrorCode.ACCESS_TOKEN_EXPIRED;
-//
-//        String jsonResponse = String.format("{\"status\": %d, \"code\": \"%s\", \"error\": \"AccessDeniedException\", \"message\": \"%s\"}",
-//                errorCode.getStatus(), errorCode.getCode(), errorCode.getMessage());
-//
-//        response.setContentType("application/json");
-//        response.setCharacterEncoding("UTF-8");
-//        response.setStatus(errorCode.getStatus()); // 에러 상태 코드
-//        response.getWriter().write(jsonResponse); // 에러 메시지
-//        response.getWriter().flush();
-//        log.info("[sendErrorResponse] - 플러시 완료");
-//    }
 
     private TokenDTO resolveToken(HttpServletRequest request) throws UnsupportedEncodingException {
         System.out.println("요청" + request.getRemoteHost());

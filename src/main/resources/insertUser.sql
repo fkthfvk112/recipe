@@ -1,0 +1,1 @@
+insert into user(user_id, name, password, grant_type) values ("testOne", "testOne", "testOne", "normal");

@@ -1,5 +1,6 @@
 package com.recipe.myrecipe;
 
+import com.recipe.myrecipe.auth.util.UserUtil;
 import com.recipe.myrecipe.util.DtoToEntity;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
@@ -16,4 +17,7 @@ public class AppConfig {
     public DtoToEntity dtoToEntity(){
         return new DtoToEntity();
     }
+
+    @Bean
+    public UserUtil userUtil(){ return new UserUtil(); }
 }

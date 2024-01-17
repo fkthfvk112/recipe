@@ -1,10 +1,14 @@
 package com.recipe.myrecipe.recipe.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
+import lombok.*;
 
 @Entity
 @Builder
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
 @Table(name="step")
 public class Step {
     @Id

@@ -8,10 +8,12 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 public class StepDTO {
     int order;
     MultipartFile photo;
 
+    String photoUrl;
     @Size(min = 5)
     String description;
     int time;

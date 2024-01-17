@@ -10,6 +10,7 @@ import com.recipe.myrecipe.recipe.entity.Recipe;
 import com.recipe.myrecipe.recipe.repository.RecipeRepository;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,12 +20,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,9 +50,20 @@ public class RecipeTest {
     @Autowired
     RecipeRepository recipeRepository;
 
+    @BeforeEach
+    public void setupDb() {
+        String encodedPw = passwordEncoder.encode("testOne");
+        String insertQuery = "INSERT INTO user(user_id, password, grant_type, email) " +
+                "VALUES('testOne', '" + encodedPw + "', 'normal', 'testOne@ggg.com')";
+        jdbc.execute(insertQuery);
+    }
 
     @Test
-    void When_createRecipe_Expect_sotreIt() throws Exception {
+    @WithMockUser(username="testOne", roles={"USER_ROLE"})
+    void When_createRecipe_Expect_sotreIt_AND_When_getRecipeDetail_Expect_RecipeDetailWithUser() throws Exception {
+
+
+        //create test
         IngredientDTO ingre1 = IngredientDTO.builder()
                 .name("test1")
                 .qqt("test")
@@ -107,9 +121,22 @@ public class RecipeTest {
         Assertions.assertTrue(savedRecipe.getCategorie().equals(dto.getCategorie()), "저장 결과가 일치하지 않습니다.");
         Assertions.assertTrue(savedRecipe.getServings() == dto.getServings(), "저장 결과가 일치하지 않습니다.");
         Assertions.assertTrue(savedRecipe.getCookMethod().equals(dto.getCookMethod()), "저장 결과가 일치하지 않습니다.");
+
+
+        //detail get test
+        Long savedRecipeId = savedRecipe.getId();
+        System.out.println("---------------- savava " + savedRecipeId);
+        MvcResult detailResult = mockMvc.perform(get("/recipe/get-recipe")
+                        .param("recipeId", savedRecipeId.toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recipeDTO").exists())
+                .andExpect(jsonPath("$.recipeOwnerInfo.userId").value("testOne"))
+                .andReturn();
     }
 
     @Test
+    @WithMockUser(username="testOne", roles={"USER_ROLE"})
     void When_createInputIsIncorrect_Expect_exception() throws Exception {
         RecipeDTO dto = RecipeDTO.builder()
                 .recipeName("")
@@ -130,6 +157,12 @@ public class RecipeTest {
 
         String responseBody = result.getResponse().getContentAsString();
         System.out.println(responseBody);
-
     }
+
+
+//    @AfterEach
+//    public void cleanupDb(){
+//        String deleteQuery = "DELETE FROM user WHERE user_id = 'testOne'";
+//        jdbc.execute(deleteQuery);
+//    }
 }

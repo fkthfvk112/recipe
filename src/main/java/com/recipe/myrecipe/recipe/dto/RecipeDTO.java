@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 public class RecipeDTO {
     @NotBlank
     @Size(min = 1, message = "최소값은 3")

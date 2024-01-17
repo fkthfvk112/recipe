@@ -1,9 +1,8 @@
 package com.recipe.myrecipe.recipe.entity;
 
+import com.recipe.myrecipe.user.entity.User;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
@@ -11,7 +10,10 @@ import java.util.List;
 @Table(name="recipe")
 @ToString
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Recipe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,12 +26,17 @@ public class Recipe {
     private int servings;
     private String cookMethod;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="recipe_id")
     private List<Ingredient> ingredients;
+
     private String description;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="recipe_id")
     private List<Step> steps;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="user_id", unique = false)
+    private User user;
 }

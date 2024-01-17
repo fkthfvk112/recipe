@@ -1,13 +1,15 @@
 package com.recipe.myrecipe.recipe.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.ToString;
+import lombok.*;
 
 @Entity
 @Table(name="ingredient")
 @ToString
+@Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ingredient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

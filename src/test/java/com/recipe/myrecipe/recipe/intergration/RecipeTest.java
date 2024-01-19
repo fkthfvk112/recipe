@@ -19,10 +19,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -96,11 +98,14 @@ public class RecipeTest {
                 .order(3)
                 .build();
 
+        //file for test
+
         RecipeDTO dto = RecipeDTO.builder()
                 .recipeName("test1")
                 .categorie("test2")
                 .servings(3)
                 .cookMethod("test3")
+                .repriPhotos(List.of("file"))
                 .ingredients(
                         List.of(ingre1, ingre2, ingre3)
                 )
@@ -111,8 +116,7 @@ public class RecipeTest {
                 .build();
 
         MvcResult result = mockMvc.perform(post("/recipe/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 

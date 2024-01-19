@@ -1,5 +1,8 @@
 package com.recipe.myrecipe.recipe.service.impl;
 
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.recipe.myrecipe.auth.util.UserUtil;
 import com.recipe.myrecipe.recipe.dto.GetDetailRecipeDTO;
 import com.recipe.myrecipe.recipe.dto.IngredientDTO;
@@ -22,8 +25,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -35,15 +40,17 @@ public class RecipeServiceImpl implements RecipeService {
     private DtoToEntity dtoToEntity;
     private UserUtil userUtil;
 
+    private Cloudinary cloudinary;
     @Autowired
     RecipeServiceImpl(ModelMapper modelMapper, RecipeRepository recipeRepository,
                       DtoToEntity dtoToEntity, UserUtil userUtil,
-                      UserRepository userRepository){
+                      UserRepository userRepository, Cloudinary cloudinary){
         this.modelMapper = modelMapper;
         this.recipeRepository = recipeRepository;
         this.dtoToEntity = dtoToEntity;
         this.userUtil = userUtil;
         this.userRepository = userRepository;
+        this.cloudinary = cloudinary;
     }
 
     public boolean saveRecipe(RecipeDTO recipeDTO){
@@ -51,17 +58,85 @@ public class RecipeServiceImpl implements RecipeService {
             String userId = userUtil.getUserId();
             Recipe recipe = dtoToEntity.RecipeDtoToRecipeEntity(recipeDTO);
 
-            log.info("[saveRecipe] recipe : {}", recipe);
+            //log.info("[saveRecipe] recipe : {}", recipe);
 
             User uploadUser = userRepository.getByUserId(userId).get();
 
+            //set username
             recipe.setUser(uploadUser);
+
+            //set saved repri urls
+            List<String> savedRepriUrls = saveImageListToAPIserver(recipeDTO.getRepriPhotos());
+            recipe.setRepriPhotos(savedRepriUrls);
+
+            //set saved step img urls
+            List<StepDTO> steps = recipeDTO.getSteps();
+            for(int i = 0; i < steps.size(); i++){
+                if(steps.get(i).getPhoto().length() >= 10){//has img
+                    String stepImgUrl = saveImageToAPIserver(steps.get(i).getPhoto());
+                    recipe.getSteps().get(i).setPhoto(stepImgUrl);
+                }
+            }
+
             recipeRepository.save(recipe);
+
             return true;
         } catch (Exception e){
             log.info("[RecipeServiceImpl/saveRecipe] - save fail {}", e);
             return false;
         }
+    }
+
+    public List<String> saveImageListToAPIserver(List<String> imgs) throws IOException {
+        List<String> updatedImgs = new ArrayList<>(imgs);
+
+        //save repri img
+        for(int i = 0; i < updatedImgs.size(); i++){
+            Map params = ObjectUtils.asMap(
+                    "use_filename", true,
+                    "unique_filename", false,
+                    "overwrite", true
+            );
+            String img = updatedImgs.get(i);
+            Object imgObj = (Object)img;
+            try{
+                Map<?, ?> uploadResult = cloudinary.uploader().upload(imgObj, ObjectUtils.emptyMap());
+                log.info("[saveImageToAPIserver] - saved repri Img success");
+                updatedImgs.set(i, uploadResult.get("secure_url").toString());
+            } catch (IOException e){
+                log.error("[saveImageToAPIserver] - IOException", e);
+                throw new IOException("Error during image upload", e);
+            }
+        }
+
+        //save
+        return updatedImgs;
+    }
+
+    public String saveImageToAPIserver(String img) throws IOException {
+
+        String savedImg = "";
+
+        //save repri img
+        Map params = ObjectUtils.asMap(
+                "use_filename", true,
+                "unique_filename", false,
+                "overwrite", true
+        );
+
+        Object imgObj = (Object)img;
+        try{
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(imgObj, ObjectUtils.emptyMap());
+            log.info("[saveImageToAPIserver] - saved repri Img success");
+            savedImg = uploadResult.get("secure_url").toString();
+        } catch (IOException e){
+            log.error("[saveImageToAPIserver] - IOException", e);
+            throw new IOException("Error during image upload", e);
+        }
+
+
+        //save
+        return savedImg;
     }
 
     public RecipeDTO getRecipeById(Long recipeId){

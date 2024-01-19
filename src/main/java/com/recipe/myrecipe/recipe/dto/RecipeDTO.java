@@ -2,12 +2,12 @@ package com.recipe.myrecipe.recipe.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
@@ -26,6 +26,10 @@ public class RecipeDTO {
 
     @NotBlank
     String cookMethod;
+
+    @NotEmpty
+    @Size(min = 1)
+    List<String> repriPhotos;
 
     @NotEmpty
     @Size(min = 1)

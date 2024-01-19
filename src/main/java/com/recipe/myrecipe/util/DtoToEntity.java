@@ -67,7 +67,7 @@ public class DtoToEntity {
 
         for (Step stepItem : steps) {
             StepDTO stepDTO = StepDTO.builder()
-                    .photoUrl(stepItem.getPhoto())
+                    .photo(stepItem.getPhoto())
                     .time(stepItem.getTime())
                     .order(stepItem.getStepOrder())
                     .description(stepItem.getDescription()).build();
@@ -76,6 +76,7 @@ public class DtoToEntity {
 
         return RecipeDTO.builder()
                 .recipeName(recipe.getRecipeName())
+                .repriPhotos(recipe.getRepriPhotos())
                 .categorie(recipe.getCategorie())
                 .cookMethod(recipe.getCookMethod())
                 .servings(recipe.getServings())

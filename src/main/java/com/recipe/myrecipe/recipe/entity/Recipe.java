@@ -26,6 +26,9 @@ public class Recipe {
     private int servings;
     private String cookMethod;
 
+    @ElementCollection
+    private List<String> repriPhotos;
+
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="recipe_id")
     private List<Ingredient> ingredients;

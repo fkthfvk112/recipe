@@ -11,9 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 @ToString
 public class StepDTO {
     int order;
-    MultipartFile photo;
-
-    String photoUrl;
+    String photo;
+    //String photoUrl;
     @Size(min = 5)
     String description;
     int time;

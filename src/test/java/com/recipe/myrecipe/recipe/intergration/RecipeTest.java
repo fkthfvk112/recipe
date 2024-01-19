@@ -8,6 +8,7 @@ import com.recipe.myrecipe.recipe.dto.RecipeDTO;
 import com.recipe.myrecipe.recipe.dto.StepDTO;
 import com.recipe.myrecipe.recipe.entity.Recipe;
 import com.recipe.myrecipe.recipe.repository.RecipeRepository;
+import com.recipe.myrecipe.recipe.service.RecipeService;
 import com.recipe.myrecipe.user.dto.UserLoginDTO;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
@@ -29,6 +31,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,6 +57,9 @@ public class RecipeTest {
 
     @Autowired
     RecipeRepository recipeRepository;
+
+    @MockBean
+    RecipeService recipeService;
 
     @BeforeEach
     public void setupDb() {
@@ -105,7 +114,7 @@ public class RecipeTest {
                 .categorie("test2")
                 .servings(3)
                 .cookMethod("test3")
-                .repriPhotos(List.of("file"))
+                .repriPhotos(List.of("imgString"))
                 .ingredients(
                         List.of(ingre1, ingre2, ingre3)
                 )
@@ -115,8 +124,12 @@ public class RecipeTest {
                 .description("testdesctestdesc")
                 .build();
 
+        when(recipeService.saveImageToAPIserver(anyString())).thenReturn("mockUrl");
+        when(recipeService.saveImageListToAPIserver(anyList())).thenReturn(List.of("mockUrl1", "mockUrl2"));
+
         MvcResult result = mockMvc.perform(post("/recipe/create")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andReturn();
 

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -13,6 +14,8 @@ import java.util.List;
 @Setter
 @ToString
 public class RecipeDTO {
+    Long recipeId;
+
     @NotBlank
     @Size(min = 1, message = "최소값은 3")
     @Size(max = 20, message = "최대값은 20")
@@ -39,4 +42,8 @@ public class RecipeDTO {
     String description;
 
     List<StepDTO> steps;
+
+    int views;
+    private LocalDateTime createdAt;
+
 }

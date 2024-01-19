@@ -75,6 +75,7 @@ public class DtoToEntity {
         }
 
         return RecipeDTO.builder()
+                .recipeId(recipe.getId())
                 .recipeName(recipe.getRecipeName())
                 .repriPhotos(recipe.getRepriPhotos())
                 .categorie(recipe.getCategorie())
@@ -83,6 +84,8 @@ public class DtoToEntity {
                 .description(recipe.getDescription())
                 .ingredients(ingredientList)
                 .steps(stepList)
+                .views(recipe.getView())
+                .createdAt(recipe.getCreatedAt())
                 .build();
     }
 }

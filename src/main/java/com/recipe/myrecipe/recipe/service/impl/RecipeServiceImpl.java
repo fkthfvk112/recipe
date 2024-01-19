@@ -20,6 +20,8 @@ import com.recipe.myrecipe.util.DtoToEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -55,12 +57,14 @@ public class RecipeServiceImpl implements RecipeService {
 
     public boolean saveRecipe(RecipeDTO recipeDTO){
         try{
+            log.info("[saveRecipe] - start");
+
             String userId = userUtil.getUserId();
             Recipe recipe = dtoToEntity.RecipeDtoToRecipeEntity(recipeDTO);
 
-            //log.info("[saveRecipe] recipe : {}", recipe);
-
+            log.info("[saveRecipe] - get user start");
             User uploadUser = userRepository.getByUserId(userId).get();
+            log.info("[saveRecipe] - get user done");
 
             //set username
             recipe.setUser(uploadUser);
@@ -78,7 +82,9 @@ public class RecipeServiceImpl implements RecipeService {
                 }
             }
 
+            log.info("[saveRecipe] - preJob done");
             recipeRepository.save(recipe);
+            log.info("[saveRecipe] - data saved at db");
 
             return true;
         } catch (Exception e){
@@ -137,6 +143,30 @@ public class RecipeServiceImpl implements RecipeService {
 
         //save
         return savedImg;
+    }
+
+    @Override
+    public List<RecipeDTO> getRecentUsers(int page, int size) {
+        Page<Recipe> recipePage = recipeRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+        List<Recipe> recipes = recipePage.getContent();
+
+        List<RecipeDTO> recipeDTOList = new ArrayList<>();
+        for(Recipe recipe:recipes){
+            recipeDTOList.add(dtoToEntity.RecipeEntityToRecipeDTO(recipe));
+        }
+        return recipeDTOList;
+    }
+
+    @Override
+    public boolean updateRecipeViews(Long recipeId) {
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid post id: " + recipeId));
+
+        recipe.setView(recipe.getView() + 1);
+
+        recipeRepository.save(recipe);
+
+        return true;
     }
 
     public RecipeDTO getRecipeById(Long recipeId){

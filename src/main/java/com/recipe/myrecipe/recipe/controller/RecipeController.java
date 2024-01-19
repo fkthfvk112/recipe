@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.DriverManager;
+import java.util.List;
 
 @Slf4j
 @RequestMapping("/recipe")
@@ -26,7 +27,7 @@ public class RecipeController {
 
     @PostMapping("/create")
     public ResponseEntity<String> createRecipe(@Valid @RequestBody RecipeDTO recipe){
-        System.out.println(recipe);
+       log.info("[createRecipe] - start with dto : {} ",recipe);
 
         if(recipeService.saveRecipe(recipe)){
             return ResponseEntity.ok("saved");
@@ -42,9 +43,18 @@ public class RecipeController {
         GetDetailRecipeDTO getDetailRecipeDTO = recipeService.getDetailRecipeById(recipeId);
 
         if(getDetailRecipeDTO != null){
+            recipeService.updateRecipeViews(recipeId);
             return ResponseEntity.ok(getDetailRecipeDTO);
         } else{
             throw new IllegalArgumentException();
         }
+    }
+
+    @GetMapping("/get-new-recipe")
+    public ResponseEntity<List<RecipeDTO>> getRecentRecipes( @RequestParam(value = "page", defaultValue = "0") int page,
+                                                             @RequestParam(value = "size", defaultValue = "10") int size){
+        List<RecipeDTO> recipes = recipeService.getRecentUsers(page, size);
+
+        return ResponseEntity.ok(recipes);
     }
 }

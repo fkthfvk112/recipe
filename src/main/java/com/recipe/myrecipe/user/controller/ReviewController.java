@@ -1,6 +1,8 @@
 package com.recipe.myrecipe.user.controller;
 
+import com.recipe.myrecipe.recipe.dto.RecipeIdNamePhotoDTO;
 import com.recipe.myrecipe.user.dto.ReviewDTO;
+import com.recipe.myrecipe.user.dto.ReviewResultDTO;
 import com.recipe.myrecipe.user.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +36,7 @@ public class ReviewController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<List<ReviewDTO>> getReviewsByRecipeId(@RequestParam Long recipeId){
+    public ResponseEntity<List<ReviewResultDTO>> getReviewsByRecipeId(@RequestParam Long recipeId){
         log.info("[getReviewsByRecipeId] - start");
         return ResponseEntity.ok(reviewService.getReviewsByRecipeId(recipeId));
     }

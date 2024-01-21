@@ -11,6 +11,7 @@ import lombok.ToString;
 public class UserSiginUpDTO {
     private String userId;
     private String userPassword;
+    private String nickName;
     private String email;
     private String grantType;
 }

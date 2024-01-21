@@ -74,6 +74,7 @@ public class userTest {
         String encodedPw = passwordEncoder.encode("testOne");
         User user = User.builder()
                 .userId("testOne")
+                .nickName("testOne")
                 .password(encodedPw)
                 .grantType("normal")
                 .email("testOne@ggg.com")
@@ -153,6 +154,7 @@ public class userTest {
     public void when_signupInfoIsCorrect_Expect_success() throws Exception{
         UserSiginUpDTO userSiginUpDTO = UserSiginUpDTO.builder()
                 .userId("siginUpTestOne")
+                .nickName("signUpTestNickName")
                 .userPassword("siginUpTestOne")
                 .email("siginUpTestOne@gmail.com")
                 .grantType("normal")

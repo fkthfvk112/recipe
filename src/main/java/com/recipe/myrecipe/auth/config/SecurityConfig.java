@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorizeRequests) -> {
                     authorizeRequests.requestMatchers("/sign-api/**").permitAll(); // 권한 없어도 열람 가능
                     authorizeRequests.requestMatchers("/recipe/create").authenticated(); //제한
+                    authorizeRequests.requestMatchers("/recipe/get-my-recipe").authenticated();
                     authorizeRequests.requestMatchers("/auth-test/**").authenticated(); //제한
                     authorizeRequests.requestMatchers("/manager/**")
                             // ROLE_은 붙이면 안 된다. hasAnyRole()을 사용할 때 자동으로 ROLE_이 붙기 때문이다.

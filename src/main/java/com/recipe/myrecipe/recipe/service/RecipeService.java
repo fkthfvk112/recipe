@@ -2,6 +2,7 @@ package com.recipe.myrecipe.recipe.service;
 
 import com.recipe.myrecipe.recipe.dto.GetDetailRecipeDTO;
 import com.recipe.myrecipe.recipe.dto.RecipeDTO;
+import com.recipe.myrecipe.recipe.dto.RecipeIdNamePhotoDTO;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,4 +16,6 @@ public interface RecipeService {
     List<RecipeDTO> getRecentUsers(int page, int size);
 
     boolean updateRecipeViews(Long recipeId);
+
+    List<RecipeIdNamePhotoDTO> getMyRecipeInfos(String userId, int page, int size);
 }

@@ -125,7 +125,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/get-accesstoken")
+    @GetMapping("/get-accesstoken")
     public ResponseEntity<String> getAccessTokenFromRefreshToken(HttpServletRequest request){
         log.info("[getAccessTokenFromRefreshToken] - 시작");
 

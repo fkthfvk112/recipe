@@ -4,10 +4,7 @@ package com.recipe.myrecipe.recipe.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.recipe.myrecipe.auth.util.UserUtil;
-import com.recipe.myrecipe.recipe.dto.GetDetailRecipeDTO;
-import com.recipe.myrecipe.recipe.dto.IngredientDTO;
-import com.recipe.myrecipe.recipe.dto.RecipeDTO;
-import com.recipe.myrecipe.recipe.dto.StepDTO;
+import com.recipe.myrecipe.recipe.dto.*;
 import com.recipe.myrecipe.recipe.dto.valueObject.RecipeOwnerInfo;
 import com.recipe.myrecipe.recipe.entity.Ingredient;
 import com.recipe.myrecipe.recipe.entity.Recipe;
@@ -22,9 +19,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -167,6 +161,30 @@ public class RecipeServiceImpl implements RecipeService {
         recipeRepository.save(recipe);
 
         return true;
+    }
+
+    @Override
+    public List<RecipeIdNamePhotoDTO> getMyRecipeInfos(String userId, int page, int size) {
+        try{
+            User user = userRepository.findByUserId(userId).get();
+            Page<Recipe> recipePage = recipeRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size));
+            List<Recipe> recipeList = recipePage.getContent();
+
+            List<RecipeIdNamePhotoDTO> recipeIdNamePhotoDTOList = new ArrayList<>();
+            for(Recipe recipe:recipeList){
+                recipeIdNamePhotoDTOList.add(
+                        RecipeIdNamePhotoDTO.builder()
+                                .recipeId(recipe.getId())
+                                .recipeName(recipe.getRecipeName())
+                                .repriPhotos(recipe.getRepriPhotos())
+                                .build());
+            }
+
+            return recipeIdNamePhotoDTOList;
+
+        }catch (Exception e){
+            return null;
+        }
     }
 
     public RecipeDTO getRecipeById(Long recipeId){

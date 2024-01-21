@@ -33,6 +33,7 @@ public class SignServiceImpl implements SignService {
         log.info("디티오오" + userSiginUpDTO.toString());
         User user = User.builder()
                 .userId(userSiginUpDTO.getUserId())
+                .nickName(userSiginUpDTO.getNickName())
                 .password(passwordEncoder.encode(userSiginUpDTO.getUserPassword()))
                 .email(userSiginUpDTO.getEmail())
                 .grantType(userSiginUpDTO.getGrantType()).build();

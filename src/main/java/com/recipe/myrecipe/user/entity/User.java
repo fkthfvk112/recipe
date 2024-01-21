@@ -29,6 +29,9 @@ public class User implements UserDetails {
 	@Column(nullable = false, unique = true)
 	private String userId;
 
+	@Column(nullable = false, unique = true)
+	private String nickName;
+
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String password;
 

@@ -5,6 +5,8 @@ import com.recipe.myrecipe.error.ErrorCode;
 import com.recipe.myrecipe.recipe.entity.Recipe;
 import com.recipe.myrecipe.recipe.repository.RecipeRepository;
 import com.recipe.myrecipe.user.dto.ReviewDTO;
+import com.recipe.myrecipe.user.dto.ReviewResultDTO;
+import com.recipe.myrecipe.user.dto.valueObject.ReviewUserDTO;
 import com.recipe.myrecipe.user.entity.Review;
 import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.ReviewRepository;
@@ -78,20 +80,24 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewDTO> getReviewsByRecipeId(Long recipeId) {
+    public List<ReviewResultDTO> getReviewsByRecipeId(Long recipeId) {
         Optional<List<Review>> optionalReviewListews = reviewRepository.findByRecipeId(recipeId);
-        List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        List<ReviewResultDTO> reviewResultDTOList = new ArrayList<>();
 
         for(Review review:optionalReviewListews.get()){
-            ReviewDTO dto = ReviewDTO.builder()
+            ReviewResultDTO dto = ReviewResultDTO.builder()
+                    .userInfo(ReviewUserDTO.builder()
+                            .userNickName(review.getUser().getNickName())
+                            .userID(review.getUser().getId())
+                            .build())
                     .message(review.getMessage())
                     .createdAt(review.getCreatedAt())
                     .recipeId(recipeId)
                     .score(review.getScore()).build();
 
-            reviewDTOList.add(dto);
+            reviewResultDTOList.add(dto);
         }
 
-        return reviewDTOList;
+        return reviewResultDTOList;
     }
 }

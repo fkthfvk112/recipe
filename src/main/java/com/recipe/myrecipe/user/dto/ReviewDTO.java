@@ -31,6 +31,4 @@ public class ReviewDTO {
 
     @NotNull
     private Long recipeId;
-
-    private LocalDateTime createdAt;
 }

@@ -8,11 +8,10 @@ import com.recipe.myrecipe.auth.service.TokenService;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
 import com.recipe.myrecipe.error.BusinessException;
 import com.recipe.myrecipe.error.ErrorCode;
-import com.recipe.myrecipe.user.dto.SignInResultDTO;
-import com.recipe.myrecipe.user.dto.UserAndRefreshDTO;
-import com.recipe.myrecipe.user.dto.UserLoginDTO;
-import com.recipe.myrecipe.user.dto.UserSiginUpDTO;
+import com.recipe.myrecipe.user.dto.*;
 import com.recipe.myrecipe.user.service.SignService;
+import com.recipe.myrecipe.user.service.UserAdditionalService;
+import com.recipe.myrecipe.user.service.impl.UserAdditionalServiceImpl;
 import com.recipe.myrecipe.user.service.impl.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -43,7 +43,7 @@ public class UserController {
     @Autowired
     UserController(UserService userService, JwtTokenProvider jwtTokenProvider,
                    SignService signService, TokenService tokenService,
-                   TokenRepository tokenRepository){
+                   TokenRepository tokenRepository, UserAdditionalService userAdditionalService){
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.signService = signService;
@@ -202,4 +202,6 @@ public class UserController {
         log.info("[accessExpired]");
         throw new BusinessException(ErrorCode.ACCESS_TOKEN_EXPIRED);
     }
+
+
 }

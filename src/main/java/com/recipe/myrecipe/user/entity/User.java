@@ -46,6 +46,10 @@ public class User implements UserDetails {
 	@CreationTimestamp
 	private Timestamp createDate;
 
+	private String userPhoto;
+
+	private String userUrl;
+
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return this.roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());

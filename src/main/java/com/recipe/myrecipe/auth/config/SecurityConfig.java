@@ -47,6 +47,8 @@ public class SecurityConfig {
                     authorizeRequests.requestMatchers("/recipe/create").authenticated(); //제한
                     authorizeRequests.requestMatchers("/recipe/get-my-recipe").authenticated();
                     authorizeRequests.requestMatchers("/auth-test/**").authenticated(); //제한
+                    authorizeRequests.requestMatchers("/feed/myfeed").authenticated(); //제한
+
                     authorizeRequests.requestMatchers("/manager/**")
                             // ROLE_은 붙이면 안 된다. hasAnyRole()을 사용할 때 자동으로 ROLE_이 붙기 때문이다.
                             .hasAnyRole("ADMIN", "MANAGER");

@@ -1,21 +1,25 @@
 package com.recipe.myrecipe.user.integration;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.Uploader;
+import com.cloudinary.utils.ObjectUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.recipe.myrecipe.MyrecipeApplication;
 import com.recipe.myrecipe.auth.util.JwtTokenProvider;
-import com.recipe.myrecipe.user.dto.ReviewDTO;
-import com.recipe.myrecipe.user.dto.UserAndRefreshDTO;
-import com.recipe.myrecipe.user.dto.UserLoginDTO;
-import com.recipe.myrecipe.user.dto.UserSiginUpDTO;
+import com.recipe.myrecipe.user.dto.*;
 import com.recipe.myrecipe.user.entity.Review;
 import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.ReviewRepository;
 import com.recipe.myrecipe.user.repository.UserRepository;
+import com.recipe.myrecipe.user.service.UserAdditionalService;
+import com.recipe.myrecipe.user.service.impl.UserAdditionalServiceImpl;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,15 +32,15 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.FactoryBasedNavigableListAssert.assertThat;
+import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -67,6 +71,14 @@ public class userTest {
 
     @Autowired
     ReviewRepository reviewRepository;
+
+    @Mock
+    private Cloudinary cloudinaryMock;
+
+    @InjectMocks
+    UserAdditionalServiceImpl userAdditionalService;
+
+
 
     @BeforeEach
     public void setupDb() {
@@ -209,6 +221,31 @@ public class userTest {
         reviewRepository.delete(savedReview);
     }
 
+
+    @Test
+    @WithMockUser(username="testOne", roles={"USER_ROLE"})
+    void When_updateUserFeed_Expect_saveIt() throws Exception {
+        UpdateFeedInfo updateFeedInfo = UpdateFeedInfo.builder()
+                .nickName("[Test]testUserNickName")
+                .userUrl("[Test]fdsd@navfds.com")
+                .build();
+        Map params = ObjectUtils.asMap(
+                "use_filename", true,
+                "unique_filename", false,
+                "overwrite", true
+        );
+
+
+        MvcResult result = mockMvc.perform(post("/feed/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateFeedInfo)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        User updatedUser =  userRepository.findByUserId("testOne").get();
+        assertEquals(updatedUser.getUserUrl(), updateFeedInfo.getUserUrl(), "url이 다릅니다.");
+        assertEquals(updatedUser.getNickName(), updateFeedInfo.getNickName(), "닉네임이 다릅니다.");
+    }
 
     @AfterEach
     public void cleanupDb(){

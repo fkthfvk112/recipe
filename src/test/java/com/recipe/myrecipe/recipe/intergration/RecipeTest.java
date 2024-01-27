@@ -64,8 +64,8 @@ public class RecipeTest {
     @BeforeEach
     public void setupDb() {
         String encodedPw = passwordEncoder.encode("testOne");
-        String insertQuery = "INSERT INTO user(user_id, password, grant_type, email) " +
-                "VALUES('testOne', '" + encodedPw + "', 'normal', 'testOne@ggg.com')";
+        String insertQuery = "INSERT INTO user(user_id, password, grant_type, email, nick_name) " +
+                "VALUES('testOne', '" + encodedPw + "', 'normal', 'testOne@ggg.com', 'testOne')";
         jdbc.execute(insertQuery);
     }
 
@@ -148,7 +148,7 @@ public class RecipeTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.recipeDTO").exists())
-                .andExpect(jsonPath("$.recipeOwnerInfo.userId").value("testOne"))
+                .andExpect(jsonPath("$.recipeOwnerInfo.userNickName").value("testOne"))
                 .andReturn();
     }
 

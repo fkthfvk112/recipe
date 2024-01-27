@@ -247,6 +247,22 @@ public class userTest {
         assertEquals(updatedUser.getNickName(), updateFeedInfo.getNickName(), "닉네임이 다릅니다.");
     }
 
+    @Test
+    void When_inputUserName_Expect_getFeedDTO() throws Exception {
+        User user = userRepository.findByUserId("testOne").get();
+
+        MvcResult result = mockMvc.perform(get("/feed/user/testOne")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("nickName", "testOne"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickName", is(user.getNickName())))
+                .andExpect(jsonPath("$.email", is(user.getEmail())))
+                .andReturn();
+
+    }
+
+
+
     @AfterEach
     public void cleanupDb(){
         String deleteReviewQuery ="DELETE FROM review WHERE user_id = (SELECT id FROM user WHERE user_id = 'testOne')";

@@ -12,7 +12,11 @@ import lombok.Setter;
 public class RecipeOwnerInfo {
 
     @NotBlank
-    String userId;
+    String userNickName;
+
+    String userUrl;
+
+    String userPhoto;
 
     //유저 url 등...
 }

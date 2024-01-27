@@ -11,6 +11,7 @@ import com.recipe.myrecipe.recipe.entity.Recipe;
 import com.recipe.myrecipe.recipe.entity.Step;
 import com.recipe.myrecipe.recipe.repository.RecipeRepository;
 import com.recipe.myrecipe.recipe.service.RecipeService;
+import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.UserRepository;
 import com.recipe.myrecipe.util.DtoToEntity;
@@ -187,6 +188,30 @@ public class RecipeServiceImpl implements RecipeService {
         }
     }
 
+    @Override
+    public List<RecipeIdNamePhotoDTO> getUserRecipeInfos(UserNickName userNickName, int page, int size) {
+        try{
+            User user = userRepository.findByNickName(userNickName.getNickName()).get();
+            Page<Recipe> recipePage = recipeRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size));
+            List<Recipe> recipeList = recipePage.getContent();
+
+            List<RecipeIdNamePhotoDTO> recipeIdNamePhotoDTOList = new ArrayList<>();
+            for(Recipe recipe:recipeList){
+                recipeIdNamePhotoDTOList.add(
+                        RecipeIdNamePhotoDTO.builder()
+                                .recipeId(recipe.getId())
+                                .recipeName(recipe.getRecipeName())
+                                .repriPhotos(recipe.getRepriPhotos())
+                                .build());
+            }
+
+            return recipeIdNamePhotoDTOList;
+
+        }catch (Exception e){
+            return null;
+        }
+    }
+
     public RecipeDTO getRecipeById(Long recipeId){
         try{
             log.info("[getRecipeById] - start");
@@ -209,7 +234,9 @@ public class RecipeServiceImpl implements RecipeService {
 
             RecipeDTO recipeDTO = dtoToEntity.RecipeEntityToRecipeDTO(recipe);
             RecipeOwnerInfo recipeOwnerInfo = RecipeOwnerInfo.builder()
-                    .userId(recipeOwner.getUserId())
+                    .userNickName(recipeOwner.getNickName())
+                    .userPhoto(recipeOwner.getUserPhoto())
+                    .userUrl(recipeOwner.getUserUrl())
                     .build();
 
             log.info("[getDetailRecipeById] - dto : {}", recipeDTO);

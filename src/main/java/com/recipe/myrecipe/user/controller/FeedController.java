@@ -4,6 +4,7 @@ import com.recipe.myrecipe.error.BusinessException;
 import com.recipe.myrecipe.error.ErrorCode;
 import com.recipe.myrecipe.user.dto.UpdateFeedInfo;
 import com.recipe.myrecipe.user.dto.UserFeedInfo;
+import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import com.recipe.myrecipe.user.service.UserAdditionalService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -43,14 +44,15 @@ public class FeedController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication == null) throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
 
-        try{
-            return ResponseEntity.ok(userAdditionalService.getUserFeedInfo(authentication.getName()));
-        }catch(BusinessException e){
-            throw e;
-        }catch (Exception e){
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
+        return ResponseEntity.ok(userAdditionalService.getUserFeedInfo(authentication.getName()));
     }
+
+    @GetMapping("/user/{nickName}")
+    public ResponseEntity<UserFeedInfo> getMyFeedInfo(@PathVariable String nickName){
+        log.info("[getMyFeedInfo] - start with " + nickName);
+        return ResponseEntity.ok(userAdditionalService.getUserFeedInfo(new UserNickName(nickName)));
+    }
+
 
     @PostMapping("/update")
     public ResponseEntity<UserFeedInfo> updateUserFeed(@RequestBody @Valid UpdateFeedInfo updateFeedInfo){

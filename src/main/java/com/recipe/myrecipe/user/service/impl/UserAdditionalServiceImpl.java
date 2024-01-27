@@ -6,6 +6,7 @@ import com.recipe.myrecipe.error.BusinessException;
 import com.recipe.myrecipe.error.ErrorCode;
 import com.recipe.myrecipe.user.dto.UpdateFeedInfo;
 import com.recipe.myrecipe.user.dto.UserFeedInfo;
+import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.UserRepository;
 import com.recipe.myrecipe.user.service.UserAdditionalService;
@@ -29,6 +30,27 @@ public class UserAdditionalServiceImpl implements UserAdditionalService {
     @Override
     public UserFeedInfo getUserFeedInfo(String userId) {
         User feedOwner = userRepository.findByUserId(userId).orElseThrow(()->{
+            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
+        });
+
+        UserFeedInfo userFeedInfo = UserFeedInfo.builder()
+                .nickName(feedOwner.getNickName())
+                .grantType(feedOwner.getGrantType())
+                .email(feedOwner.getEmail())
+                .userId(feedOwner.getUserId())
+                .userPhoto(feedOwner.getUserPhoto())
+                .userUrl(feedOwner.getUserUrl())
+                .build();
+
+        return userFeedInfo;
+    }
+
+    @Override
+    public UserFeedInfo getUserFeedInfo(UserNickName userNickName) {
+        log.info("[getUserFeedInfo] - start");
+        log.info("[getUserFeedInfo] - start " + userNickName.getNickName());
+
+        User feedOwner = userRepository.findByNickName(userNickName.getNickName()).orElseThrow(()->{
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         });
 

@@ -6,6 +6,7 @@ import com.recipe.myrecipe.recipe.dto.GetDetailRecipeDTO;
 import com.recipe.myrecipe.recipe.dto.RecipeDTO;
 import com.recipe.myrecipe.recipe.dto.RecipeIdNamePhotoDTO;
 import com.recipe.myrecipe.recipe.service.RecipeService;
+import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,5 +76,16 @@ public class RecipeController {
         String userId = authentication.getName();
 
         return ResponseEntity.ok(recipeService.getMyRecipeInfos(userId, page, size));
+    }
+
+    @GetMapping("/get-user-recipe")
+    public ResponseEntity<List<RecipeIdNamePhotoDTO>> getUserRecipes(
+            @RequestParam String userNickName,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size){
+
+        log.info("[getUserRecipes] - start with " + userNickName);
+
+        return ResponseEntity.ok(recipeService.getUserRecipeInfos(new UserNickName(userNickName), page, size));
     }
 }

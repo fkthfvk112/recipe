@@ -56,10 +56,10 @@ public class RecipeController {
         }
     }
 
-    @GetMapping("/get-new-recipe")
+    @GetMapping("/recent-recipe")
     public ResponseEntity<List<RecipeDTO>> getRecentRecipes( @RequestParam(value = "page", defaultValue = "0") int page,
                                                              @RequestParam(value = "size", defaultValue = "10") int size){
-        List<RecipeDTO> recipes = recipeService.getRecentUsers(page, size);
+        List<RecipeDTO> recipes = recipeService.getRecentRecipes(page, size);
 
         return ResponseEntity.ok(recipes);
     }
@@ -87,5 +87,17 @@ public class RecipeController {
         log.info("[getUserRecipes] - start with " + userNickName);
 
         return ResponseEntity.ok(recipeService.getUserRecipeInfos(new UserNickName(userNickName), page, size));
+    }
+
+    @GetMapping("/ingres")
+    public ResponseEntity<List<RecipeDTO>> getRecipesByIngres(@RequestParam(value = "ingres") List<String> ingredients,
+                                                              @RequestParam(value = "page", defaultValue = "0") int page,
+                                                              @RequestParam(value = "size", defaultValue = "10") int size){
+
+        log.info("[getRecipesByIngres] - start with " + ingredients.toString());
+
+        List<RecipeDTO> recipes = recipeService.getRecipesByIngres(ingredients,page, size);
+
+        return ResponseEntity.ok(recipes);
     }
 }

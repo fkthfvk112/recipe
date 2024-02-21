@@ -141,7 +141,7 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public List<RecipeDTO> getRecentUsers(int page, int size) {
+    public List<RecipeDTO> getRecentRecipes(int page, int size) {
         Page<Recipe> recipePage = recipeRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
         List<Recipe> recipes = recipePage.getContent();
 
@@ -210,6 +210,22 @@ public class RecipeServiceImpl implements RecipeService {
         }catch (Exception e){
             return null;
         }
+    }
+
+    @Override
+    public List<RecipeDTO> getRecipesByIngres(List<String> ingredients, int page, int size) {
+        log.info("[getRecipesByIngres/service] - start");
+        Page<Recipe> recipePage = recipeRepository.findAllByIngredients(ingredients, PageRequest.of(page, size));
+        log.info("[selected] : " + recipePage.getContent());
+
+
+        List<Recipe> recipes = recipePage.getContent();
+
+        List<RecipeDTO> recipeDTOList = new ArrayList<>();
+        for(Recipe recipe:recipes){
+            recipeDTOList.add(dtoToEntity.RecipeEntityToRecipeDTO(recipe));
+        }
+        return recipeDTOList;
     }
 
     public RecipeDTO getRecipeById(Long recipeId){

@@ -46,6 +46,7 @@ public class SecurityConfig {
                     authorizeRequests.requestMatchers("/sign-api/**").permitAll(); // 권한 없어도 열람 가능
                     authorizeRequests.requestMatchers("/recipe/create").authenticated(); //제한
                     authorizeRequests.requestMatchers("/recipe/get-my-recipe").authenticated();
+                    authorizeRequests.requestMatchers("/recipe/ingres").permitAll();
                     authorizeRequests.requestMatchers("/auth-test/**").authenticated(); //제한
                     authorizeRequests.requestMatchers("/feed/myfeed").authenticated(); //제한
 

@@ -14,11 +14,13 @@ public interface RecipeService {
     GetDetailRecipeDTO getDetailRecipeById(Long recipeId);
     List<String> saveImageListToAPIserver(List<String> imgs)  throws IOException;
     String saveImageToAPIserver(String img) throws IOException;
-    List<RecipeDTO> getRecentUsers(int page, int size);
+    List<RecipeDTO> getRecentRecipes(int page, int size);
 
     boolean updateRecipeViews(Long recipeId);
 
     List<RecipeIdNamePhotoDTO> getMyRecipeInfos(String userId, int page, int size);
     List<RecipeIdNamePhotoDTO> getUserRecipeInfos(UserNickName userNickName, int page, int size);
+
+    List<RecipeDTO> getRecipesByIngres(List<String> ingredients, int page, int size);
 
 }

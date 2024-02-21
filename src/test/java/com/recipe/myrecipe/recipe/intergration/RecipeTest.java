@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -174,6 +175,17 @@ public class RecipeTest {
 
         String responseBody = result.getResponse().getContentAsString();
         System.out.println(responseBody);
+    }
+
+    @Test
+    void When_InputIngredientName_Exprect_IngreContainRecipe() throws Exception {//테스트 sql 작성
+        List ingreList = List.of("소고기", "양파");
+
+        MvcResult result = mockMvc.perform(get("/recipe/find-by-ingredient")
+                        .param(objectMapper.writeValueAsString(ingreList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status", is(200)))
+                .andReturn();
     }
 
 

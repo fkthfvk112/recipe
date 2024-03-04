@@ -24,6 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,16 +64,22 @@ public class RecipeTest {
     RecipeService recipeService;
 
     @BeforeEach
-    public void setupDb() {
+    public void setupDbToBeDeleted() {//수정:삭제 및 이하 코드 리팩토링
         String encodedPw = passwordEncoder.encode("testOne");
         String insertQuery = "INSERT INTO user(user_id, password, grant_type, email, nick_name) " +
                 "VALUES('testOne', '" + encodedPw + "', 'normal', 'testOne@ggg.com', 'testOne')";
         jdbc.execute(insertQuery);
     }
 
+
+    @BeforeEach
+    public void setupDb() {
+        System.out.println("setupDb");
+    }
+
     @Test
     @WithMockUser(username="testOne", roles={"USER_ROLE"})
-    void When_createRecipe_Expect_sotreIt_AND_When_getRecipeDetail_Expect_RecipeDetailWithUser() throws Exception {
+    void When_createRecipe_Expect_storeIt_AND_When_getRecipeDetail_Expect_RecipeDetailWithUser() throws Exception {
 
 
         //create test
@@ -155,6 +162,7 @@ public class RecipeTest {
 
     @Test
     @WithMockUser(username="testOne", roles={"USER_ROLE"})
+    @Sql("/TestQuery/TestInsertQuery.sql")
     void When_createInputIsIncorrect_Expect_exception() throws Exception {
         RecipeDTO dto = RecipeDTO.builder()
                 .recipeName("")

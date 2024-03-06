@@ -1,6 +1,5 @@
 package com.recipe.myrecipe.recipe.intergration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recipe.myrecipe.MyrecipeApplication;
 import com.recipe.myrecipe.recipe.dto.IngredientDTO;
@@ -9,9 +8,7 @@ import com.recipe.myrecipe.recipe.dto.StepDTO;
 import com.recipe.myrecipe.recipe.entity.Recipe;
 import com.recipe.myrecipe.recipe.repository.RecipeRepository;
 import com.recipe.myrecipe.recipe.service.RecipeService;
-import com.recipe.myrecipe.user.dto.UserLoginDTO;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,15 +18,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -45,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = MyrecipeApplication.class)
 @Transactional
 @AutoConfigureMockMvc
-public class RecipeTest {
+public class RecipeTest_Ig {
     @Autowired
     JdbcTemplate jdbc;
     @Autowired
@@ -71,17 +65,9 @@ public class RecipeTest {
         jdbc.execute(insertQuery);
     }
 
-
-    @BeforeEach
-    public void setupDb() {
-        System.out.println("setupDb");
-    }
-
     @Test
     @WithMockUser(username="testOne", roles={"USER_ROLE"})
     void When_createRecipe_Expect_storeIt_AND_When_getRecipeDetail_Expect_RecipeDetailWithUser() throws Exception {
-
-
         //create test
         IngredientDTO ingre1 = IngredientDTO.builder()
                 .name("test1")
@@ -162,8 +148,8 @@ public class RecipeTest {
 
     @Test
     @WithMockUser(username="testOne", roles={"USER_ROLE"})
-    @Sql("/TestQuery/TestInsertQuery.sql")
     void When_createInputIsIncorrect_Expect_exception() throws Exception {
+
         RecipeDTO dto = RecipeDTO.builder()
                 .recipeName("")
                 .categorie("")
@@ -196,10 +182,10 @@ public class RecipeTest {
                 .andReturn();
     }
 
+    @Test
+    void When_InputIngredientOrRecipeName_Expect_Recipe() throws Exception{
 
-//    @AfterEach
-//    public void cleanupDb(){
-//        String deleteQuery = "DELETE FROM user WHERE user_id = 'testOne'";
-//        jdbc.execute(deleteQuery);
-//    }
+
+    }
+
 }

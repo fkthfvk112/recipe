@@ -1,8 +1,7 @@
 package com.recipe.myrecipe.recipe.service;
 
-import com.recipe.myrecipe.recipe.dto.GetDetailRecipeDTO;
-import com.recipe.myrecipe.recipe.dto.RecipeDTO;
-import com.recipe.myrecipe.recipe.dto.RecipeIdNamePhotoDTO;
+import com.recipe.myrecipe.recipe.dto.*;
+import com.recipe.myrecipe.recipe.entity.Recipe;
 import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 
 import java.io.IOException;
@@ -23,4 +22,5 @@ public interface RecipeService {
 
     List<RecipeDTO> getRecipesByIngres(List<String> ingredients, int page, int size);
 
+    List<RecipeDTO> getRecipesBySearchingCondtion(RecipeSearchingCondition searchingCon, RecipeSortingConEnum sortingCon, int page, int size);
 }

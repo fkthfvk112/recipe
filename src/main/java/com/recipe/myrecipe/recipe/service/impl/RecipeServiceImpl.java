@@ -16,6 +16,7 @@ import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.UserRepository;
 import com.recipe.myrecipe.util.DtoToEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -226,6 +227,14 @@ public class RecipeServiceImpl implements RecipeService {
             recipeDTOList.add(dtoToEntity.RecipeEntityToRecipeDTO(recipe));
         }
         return recipeDTOList;
+    }
+
+    @Override
+    public List<RecipeDTO> getRecipesBySearchingCondtion(RecipeSearchingCondition searchingCon, RecipeSortingConEnum sortingCon, int page, int size) {
+
+        //have to edit
+        throw new NotImplementedException();
+        //return null;
     }
 
     public RecipeDTO getRecipeById(Long recipeId){

@@ -15,6 +15,8 @@ import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import com.recipe.myrecipe.user.entity.User;
 import com.recipe.myrecipe.user.repository.UserRepository;
 import com.recipe.myrecipe.util.DtoToEntity;
+import com.recipe.myrecipe.util.ListToString;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.modelmapper.ModelMapper;
@@ -24,9 +26,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -229,12 +234,57 @@ public class RecipeServiceImpl implements RecipeService {
         return recipeDTOList;
     }
 
+    @Transactional
     @Override
-    public List<RecipeDTO> getRecipesBySearchingCondtion(RecipeSearchingCondition searchingCon, RecipeSortingConEnum sortingCon, int page, int size) {
+    public List<RecipeDTO> getRecipesBySearchingCondition(RecipeSearchingCondition searchingCon, RecipeSortingConEnum sortingCon, int page, int size) {
+        log.info("[getRecipesBySearchingCondition] - start");
 
-        //have to edit
-        throw new NotImplementedException();
-        //return null;
+        Integer searcingConMin_nullOrValue = null;
+        Integer searcingConMax_nullOrValue = null;
+        String searcingConName_nullOrValue =  null;
+        LocalDateTime searcingConDate_nullOrValue = null;
+        String searcingConMethod_nullOrValue = null;
+        Boolean searcingConIngreCon_nullOrValue = null;
+        String searcingConCategory_nullOrValue = null;
+        String sortingConCategory_nullOrValue = null;
+        String ingredintByDelim_nullOrValue = null;
+
+        if(searchingCon != null){
+            if(searchingCon.getServingsCon() != null) {
+                searcingConMin_nullOrValue = searchingCon.getServingsCon().getMin();
+                searcingConMax_nullOrValue = searchingCon.getServingsCon().getMax();
+            }
+            if(searchingCon.getIngredientNames() != null){
+                ingredintByDelim_nullOrValue = ListToString.convertToDelimSeperatedString(searchingCon.getIngredientNames(), "/");
+            }
+            searcingConName_nullOrValue = searchingCon.getRecipeName();
+            searcingConDate_nullOrValue = searchingCon.getCreatedDate();
+            searcingConMethod_nullOrValue = searchingCon.getCookMethod();
+            searcingConIngreCon_nullOrValue = searchingCon.isIngredientAndCon();
+            searcingConCategory_nullOrValue = searchingCon.getCookCategory();
+            sortingConCategory_nullOrValue = sortingCon.toString();
+        }
+        log.info("recipeDTOList4 - " + ingredintByDelim_nullOrValue);
+
+
+        Optional<List<Recipe>> searchedRecipesOp =  recipeRepository.findRecipeByConditions(searcingConName_nullOrValue, searcingConDate_nullOrValue, searcingConMethod_nullOrValue,
+                searcingConIngreCon_nullOrValue, ingredintByDelim_nullOrValue, searcingConMin_nullOrValue, searcingConMax_nullOrValue,
+                searcingConCategory_nullOrValue, sortingConCategory_nullOrValue, page, size);
+
+        if(!searchedRecipesOp.isPresent()){
+            return List.of();
+        }
+
+        List<RecipeDTO> recipeDTOList = new ArrayList<>();
+        for(Recipe recipe: searchedRecipesOp.get()){
+            log.info("recipeDTOList3 - " + dtoToEntity.RecipeEntityToRecipeDTO(recipe));
+            recipeDTOList.add(dtoToEntity.RecipeEntityToRecipeDTO(recipe));
+            //recipeDTOList.add(dtoToEntity.RecipeEntityToRecipeDTO(recipe));
+        }
+
+        log.info("recipeDTOList - " + recipeDTOList);
+
+        return recipeDTOList;
     }
 
     public RecipeDTO getRecipeById(Long recipeId){

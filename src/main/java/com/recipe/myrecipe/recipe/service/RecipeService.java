@@ -22,5 +22,5 @@ public interface RecipeService {
 
     List<RecipeDTO> getRecipesByIngres(List<String> ingredients, int page, int size);
 
-    List<RecipeDTO> getRecipesBySearchingCondtion(RecipeSearchingCondition searchingCon, RecipeSortingConEnum sortingCon, int page, int size);
+    List<RecipeDTO> getRecipesBySearchingCondition(RecipeSearchingCondition searchingCon, RecipeSortingConEnum sortingCon, int page, int size);
 }

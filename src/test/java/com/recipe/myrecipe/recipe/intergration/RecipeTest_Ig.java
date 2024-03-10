@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -64,7 +65,6 @@ public class RecipeTest_Ig {
                 "VALUES('testOne', '" + encodedPw + "', 'normal', 'testOne@ggg.com', 'testOne')";
         jdbc.execute(insertQuery);
     }
-
     @Test
     @WithMockUser(username="testOne", roles={"USER_ROLE"})
     void When_createRecipe_Expect_storeIt_AND_When_getRecipeDetail_Expect_RecipeDetailWithUser() throws Exception {

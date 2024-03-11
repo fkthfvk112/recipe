@@ -2,9 +2,7 @@ package com.recipe.myrecipe.recipe.controller;
 
 import com.recipe.myrecipe.error.BusinessException;
 import com.recipe.myrecipe.error.ErrorCode;
-import com.recipe.myrecipe.recipe.dto.GetDetailRecipeDTO;
-import com.recipe.myrecipe.recipe.dto.RecipeDTO;
-import com.recipe.myrecipe.recipe.dto.RecipeIdNamePhotoDTO;
+import com.recipe.myrecipe.recipe.dto.*;
 import com.recipe.myrecipe.recipe.service.RecipeService;
 import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import jakarta.validation.Valid;
@@ -99,5 +97,15 @@ public class RecipeController {
         List<RecipeDTO> recipes = recipeService.getRecipesByIngres(ingredients,page, size);
 
         return ResponseEntity.ok(recipes);
+    }
+
+    @GetMapping("/conditions")
+    public ResponseEntity<List<RecipeDTO>> getRecipesByConditions(@RequestParam(value = "searchingCondition")RecipeSearchingCondition searchingCon,
+                                                                  @RequestParam(value = "sortingCondition")RecipeSortingConEnum sortingCon,
+                                                                  @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                  @RequestParam(value = "size", defaultValue = "10") int size){
+        log.info("[getRecipesByConditions] - start with condition : " + sortingCon + "\n sorting condtion " + sortingCon);
+
+        return ResponseEntity.ok(recipeService.getRecipesBySearchingCondition(searchingCon, sortingCon, page, size));
     }
 }

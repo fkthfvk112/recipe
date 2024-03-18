@@ -3,6 +3,7 @@ package com.recipe.myrecipe.recipe.controller;
 import com.recipe.myrecipe.error.BusinessException;
 import com.recipe.myrecipe.error.ErrorCode;
 import com.recipe.myrecipe.recipe.dto.*;
+import com.recipe.myrecipe.recipe.dto.valueObject.ServingCondition;
 import com.recipe.myrecipe.recipe.service.RecipeService;
 import com.recipe.myrecipe.user.dto.valueObject.UserNickName;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.DriverManager;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -100,11 +102,31 @@ public class RecipeController {
     }
 
     @GetMapping("/conditions")
-    public ResponseEntity<List<RecipeDTO>> getRecipesByConditions(@RequestParam(value = "searchingCondition")RecipeSearchingCondition searchingCon,
-                                                                  @RequestParam(value = "sortingCondition")RecipeSortingConEnum sortingCon,
+    public ResponseEntity<List<RecipeDTO>> getRecipesByConditions(@RequestParam(value = "recipeName", required = false) String recipeName,
+                                                                  @RequestParam(value = "createdDate", required = false) LocalDateTime createdDate,
+                                                                  @RequestParam(value = "cookMethod", required = false) String cookMethod,
+                                                                  @RequestParam(value = "ingredientNames", required = false) List<String> ingredientNames,
+                                                                  @RequestParam(value = "ingredientAndCon", required = false) Boolean ingredientAndCon,
+                                                                  @RequestParam(value = "servingsMin", required = false) Integer servingsMin,
+                                                                  @RequestParam(value = "servingsMax", required = false) Integer servingsMax,
+                                                                  @RequestParam(value = "sortingCondition") RecipeSortingConEnum sortingCon,
+                                                                  @RequestParam(value = "cookCategory", required = false) String cookCategory,
                                                                   @RequestParam(value = "page", defaultValue = "0") int page,
                                                                   @RequestParam(value = "size", defaultValue = "10") int size){
         log.info("[getRecipesByConditions] - start with condition : " + sortingCon + "\n sorting condtion " + sortingCon);
+
+        RecipeSearchingCondition searchingCon = RecipeSearchingCondition.builder()
+                .recipeName(recipeName)
+                .createdDate(createdDate)
+                .cookMethod(cookMethod)
+                .ingredientNames(ingredientNames)
+                .ingredientAndCon(ingredientAndCon)
+                .servingsCon(servingsMin == null || servingsMax == null? null:ServingCondition.builder()
+                        .max(servingsMax)
+                        .min(servingsMin)
+                        .build())
+                .cookCategory(cookCategory)
+                .build();
 
         return ResponseEntity.ok(recipeService.getRecipesBySearchingCondition(searchingCon, sortingCon, page, size));
     }

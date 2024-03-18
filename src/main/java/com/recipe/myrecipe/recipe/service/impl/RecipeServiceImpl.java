@@ -260,7 +260,7 @@ public class RecipeServiceImpl implements RecipeService {
             searcingConName_nullOrValue = searchingCon.getRecipeName();
             searcingConDate_nullOrValue = searchingCon.getCreatedDate();
             searcingConMethod_nullOrValue = searchingCon.getCookMethod();
-            searcingConIngreCon_nullOrValue = searchingCon.isIngredientAndCon();
+            searcingConIngreCon_nullOrValue = searchingCon.getIngredientAndCon();
             searcingConCategory_nullOrValue = searchingCon.getCookCategory();
             sortingConCategory_nullOrValue = sortingCon.toString();
         }
